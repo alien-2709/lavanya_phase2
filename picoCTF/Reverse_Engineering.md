@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ```
-- From this , I found out the code algorithm , how it takes input 87,3 and 3 and goes through three processes :
+- From this , I found out the code algorithm , how it takes input a,b=87,c=3 and d=3 and goes through three processes :
 - 1. 87<<3 which is a left shift by 3 so we multiply 87 * 2^3 and obtain 696.
   2. 696/3=232
   3. 232-input.
@@ -230,5 +230,71 @@ int main(int argc, char *argv[]) {
 ```
 picoCTF{000000e8}
 ```
+
+# 2.vault-door-3
+> This vault uses for-loops and byte arrays. The source code for this vault is here: VaultDoor3.java
+## Solution:
+- First I opened the java file to see what it contains:
+```
+import java.util.*;
+
+class VaultDoor3 {
+    public static void main(String args[]) {
+        VaultDoor3 vaultDoor = new VaultDoor3();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter vault password: ");
+        String userInput = scanner.next();
+	String input = userInput.substring("picoCTF{".length(),userInput.length()-1);
+	if (vaultDoor.checkPassword(input)) {
+	    System.out.println("Access granted.");
+	} else {
+	    System.out.println("Access denied!");
+        }
+    }
+
+    // Our security monitoring team has noticed some intrusions on some of the
+    // less secure doors. Dr. Evil has asked me specifically to build a stronger
+    // vault door to protect his Doomsday plans. I just *know* this door will
+    // keep all of those nosy agents out of our business. Mwa ha!
+    //
+    // -Minion #2671
+    public boolean checkPassword(String password) {
+        if (password.length() != 32) {
+            return false;
+        }
+        char[] buffer = new char[32];
+        int i;
+        for (i=0; i<8; i++) {
+            buffer[i] = password.charAt(i);
+        }
+        for (; i<16; i++) {
+            buffer[i] = password.charAt(23-i);
+        }
+        for (; i<32; i+=2) {
+            buffer[i] = password.charAt(46-i);
+        }
+        for (i=31; i>=17; i-=2) {
+            buffer[i] = password.charAt(i);
+        }
+        String s = new String(buffer);
+        return s.equals("jU5t_a_sna_3lpm12g94c_u_4_m7ra41");
+    }
+}
+```
+- from this , we can see that it contains an algorithm where the real flag is scrambled in a way to obtain `jU5t_a_sna_3lpm12g94c_u_4_m7ra41`.
+- it basically accepts a  string as input as passes it to checkPassword.
+- the password needs to be a 32 character string which after undergoing the loops , the buffer must be equivalent to the scrambled flag.
+- thus , we must map it manually.
+- in ```for (i=0; i<8; i++) {buffer[i] = password.charAt(i);}``` , here for characters 0-7, the password remains the same as the buffer i.e `jU5t_a_s`.
+- in ```for (; i<16; i++) {buffer[i] = password.charAt(23-i);}```, here for characters 8-15 , the password characters are replaced by characters in the buffer at the position `23-i` , for example, character 8 `n` is replaced by character 15 `1`, similarly the following changes take place: `na_3lpm1` changes to `1mpl3_an`.
+- in ```for (; i<32; i+=2) { buffer[i] = password.charAt(46-i);```, here for characters 16-31 , the password characters are replaced by characters in the buffer at position `46-i`, for example , character 16 `2` is replaced by character 30 `4`. however here alternate characters between 16-31 get replaced as i increments by 2 everytime so the rest remain the same as guaranteed by ```for (i=31; i>=17; i-=2) {buffer[i] = password.charAt(i);```. The following changes takes place:`2g94c_u_4_m7ra41` changes to `4gr4m_4_u_c79a21`.
+- Therfore the total password obtained after mapping is `jU5t_a_s1mpl3_an4gr4m_4_u_c79a21`.
+
+## Flag:
+```
+picoCTF{jU5t_a_s1mpl3_an4gr4m_4_u_c79a21}
+```
+
+
 
 
