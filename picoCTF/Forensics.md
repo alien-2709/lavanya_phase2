@@ -49,14 +49,82 @@
 - So , I further changed it to `32 03 00 00` and finally saw the flag:
   <img width="1157" height="835" alt="Screenshot (478)" src="https://github.com/user-attachments/assets/62e3275a-7047-4336-a0a8-087e4b326a5d" />
 
-
-  
-  
-
-  
-  
-  
-
-
-   ## Flag:
+ ## Flag:
   `picoCTF{qu1t3_a_v13w_2020}`
+
+## Resources:
+- (https://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm)
+- HXD hexeditor.
+
+# 3.trivial flag transfer protocol:
+> Figure out how they moved the flag.
+
+## Solution:
+- checked file type and obtained the following:
+```
+$ file tftp.pcapng
+tftp.pcapng: pcapng capture file - version 1.0
+```
+- To read this capture file , I downloaded wireshark to do so.
+- I didnt know what tftp or trivial flag transfer protocol is so I googled and found that  TFTP, or Trivial File Transfer Protocol, is a simple network protocol for transferring files between a client and server, commonly used for booting devices or transferring firmware and configuration files. It runs on top of UDP and uses port 69, but lacks authentication and security features, making it suitable for trusted, local networks only.
+- I learnt that data is sent in blocks and that in order for it to be recieved , each block must be acknowledged.
+- In wireshark, I used to *tftp.type* capture filter to check which files are sent and recieved .
+  <img width="1920" height="974" alt="Screenshot (479)" src="https://github.com/user-attachments/assets/c99aa5d5-27a6-44de-9263-0f324dbb2a01" />
+
+- Now , we can see that there are seperate files “instructions.txt”, “plan”, “picture1.bmp”, “picture2.bmp”, “picture3.bmp” that we *export objects , save all* :
+  <img width="1920" height="855" alt="Screenshot (480)" src="https://github.com/user-attachments/assets/e2c410f3-4850-4df6-94a4-51d4111a7ea8" />
+
+- Next , I catted out the instructions in terminal and obtained:
+  ```
+  $ cat instructions.txt
+  GSGCQBRFAGRAPELCGBHEGENSSVPFBJRZHFGQVFTHVFRBHESYNTGENAFSRE.SVTHERBHGNJNLGBUVQRGURSYNTNAQVJVYYPURPXONPXSBEGURCYNA
+  ```
+- I put the encoded message into a cipher identifier and obtained it to be the `ROT13` cipher and by using an online decoder , I obtained the following message:
+```
+TFTPDOESNTENCRYPTOURTRAFFICSOWEMUSTDISGUISEOURFLAGTRANSFER.FIGUREOUTAWAYTOHIDETHEFLAGANDIWILLCHECKBACKFORTHEPLAN.
+```
+- Then , I catted out the plan file:
+  ```
+  $ cat plan
+  VHFRQGURCEBTENZNAQUVQVGJVGU-QHRQVYVTRAPR.PURPXBHGGURCUBGBF
+  ```
+- Again its `ROT13` , the decoded message is:
+```
+IUSEDTHEPROGRAMANDHIDITWITH-DUEDILIGENCE.CHECKOUTTHEPHOTOS
+```
+- Here , it said that the program is hid with -`DUEDILIGENCE` so it must be some kind of code , key or password.
+- Next , I tried to install the program.deb file but I wasn't able to
+```
+ $ sudo apt-get install ./program.deb
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Note, selecting 'steghide' instead of './program.deb'
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+
+The following packages have unmet dependencies:
+ steghide : Depends: libjpeg62-turbo (>= 1:1.3.1) but it is not installable
+E: Unable to correct problems, you have held broken packages.
+```
+- steghide which is used to hide data in various files is the actual program name , so I think that's what we use for the pictures .
+- I didn't know how to use steghide so I found out the command line using Google: `steghide extract -sf <filename> -p <password>` , So I tried this with all the picture files but only succeeded with `picture3.bmp`.
+```
+$ steghide extract -sf picture3.bmp -p 'DUEDILIGENCE'
+wrote extracted data to "flag.txt".
+```
+- Since it wrote extracted data to flag.txt , I catted it out and obtained the flag.
+```
+$ cat flag.txt
+picoCTF{h1dd3n_1n_pLa1n_51GHT_18375919}
+```
+
+## Flag:
+`picoCTF{h1dd3n_1n_pLa1n_51GHT_18375919}`
+
+## Resources:
+- (https://www.dcode.fr/cipher-identifier)
+  
