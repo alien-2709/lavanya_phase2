@@ -89,3 +89,53 @@ picoCTF{h1dd3n_1n_1m4g3_92f08d7c}
 
 ## Flag:
 `picoCTF{h1dd3n_1n_1m4g3_92f08d7c}`
+
+# 3.Corrupted file:
+> This file seems broken... or is it? Maybe a couple of bytes could make all the difference. Can you figure out how to bring it back to life?
+Download the file here.
+
+## Solution: 
+- The file doesn't seem to open in the viewer as it is corrupted.
+- Using `strings -a file` , I found the header to be `JFIF` , something that matches a `.jpg` file .
+```
+$ strings -a file
+JFIF <--
+ $.' ",#
+(7),01444
+'9=82<.342
+!22222222222222222222222222222222222222222222222222
+$3br
+%&'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz
+        #3R
+&'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz
+<Sqaa{w&
+neS=
+T ^f
+(ajI
+toQ\
+so%z
+J#5-
+)`*=
+OFT'(>h
+*)rG
+Y+9?
+BW8b
+}uqu
+ow-{
+knwy
+efw]
+om,2;I{<
+iQG${
+```
+- Thus , I renamed the file as `file.jpg` and tried to open it but it was to no luck.
+- Next , I used the `hxd hexeditor` to view the hex data of the file and also used a general jpg header data for reference.
+<img width="500" height="500" alt="Screenshot (484)" src="https://github.com/user-attachments/assets/de612880-386d-4c2c-8ad8-e177d6cbb40e" />
+
+- By refering to this table through (https://www.file-recovery.com/jpg-signature-format.htm) , I found that JPEG files (compressed images) start with an image marker which always contains the marker code hex values`FF D8 FF` while here it is `5C 78 FF` , so I edited it and opened the file to find the flag.
+![file](https://github.com/user-attachments/assets/e3b27fca-cf95-4177-980d-c7368622a8e8)
+
+## Flag:
+`picoCTF{r3st0r1ng_th3_by73s_1512b52a}`
+
+
+
