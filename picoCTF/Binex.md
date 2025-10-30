@@ -94,3 +94,11 @@ picoCTF{7h3_cu570m3r_15_n3v3r_SEGFAULT_74f6c0e7}
 > Clutter, clutter everywhere and not a byte to use.
 nc mars.picoctf.net 31890
 
+## Solution:
+- I first check the file type
+```
+ $ file chall
+chall: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=181b4752cc92cfa231c45fe56676612e0ded947a, not stripped
+```
+- 
+
