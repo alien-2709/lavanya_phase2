@@ -316,3 +316,5 @@ decrypted ciphertext: fe¦¾
 ```
 ## Flag:
 `picoCTF{su((3ss_(r@ck1ng_r3@_3319c817}`
+## Resources:
+- https://stackoverflow.com/questions/16056135/how-to-use-openssl-to-encrypt-decrypt-files
