@@ -200,4 +200,119 @@ Additional details will be available after launching your challenge instance.
 > After some intensive reconassainance they found out that the bank has an oracle that was used to encrypt the password and can be found here nc titan.picoctf.net 60496. Decrypt the password and use it to decrypt the message. The oracle can decrypt anything except the password.
 
 ## Solution:
-- 
+- I used `binwalk secret.enc` to obtain information and found out that it was openssl encryption with salt = `0x75B7D8976FC13361`
+```
+$ binwalk secret.enc
+
+DECIMAL       HEXADECIMAL     DESCRIPTION
+--------------------------------------------------------------------------------
+0             0x0             OpenSSL encryption, salted, salt: 0x75B7D8976FC13361
+
+```
+- Next , I read up on Openssl encryption and how it uses a private key for encryption.
+- The password is encoded with the private key and the oracle will not decrypt the password. The ciphertext is AES encrypted, and the password contains the key to that file.
+- Upon catting out `secret.enc` and `password.enc` , I found the following :
+```
+Salted__u
+ge0"
+```
+and
+```
+$ cat password.enc
+356725273641263455592056939840378739517057766883466674233026739001182894349569240203335030784352737018654625926569202936
+```
+- the password is clearly a ciphertext that the oracle doesn't accept.
+- the oracle is based on rsa and the homomorphic property is ` Enc(m1)×Enc(m2)=Enc(m1×m2) ` and  for RSA : `RSA(m1)×RSA(m2)=m1^e ×m2^e(modn)=(m1xm2)^e(modn)=RSA(m1×m2).`
+- So if we `c1=Enc(m1)` so we can choose m2 and when we pass m2 to the encryption oracle , we get `c2=Enc(m2)` and we compute `c3=c1xc2=Enc(m1xm2)` , then if we pass c3 to the decryption oracle we can obtain m3 which is `m3=dec(c3)=dec(enc(m1xm2))=m1xm2`, so as we chose m2 , we can get m1=m3/m2.
+- with the password in hand, we can decrypt secret.enc using `openssl enc -aes-256-cbc -d -in secret.enc -pass pass:<password-goes-here>.`( found this using the hint).
+- with the help of A.I , I found this script to run in order to decrypt the password and find the flag.
+```
+from subprocess import run, PIPE
+
+# Read ciphertext
+with open("password.enc", "r") as f:
+        c = int(f.read())
+
+print("Phase 1: Get password\n")
+
+print(f"c = {c}\n")
+
+# Get message from user
+m1 = input("Enter message (m1): ")
+m1_bytes = bytes(m1, "utf-8")
+m1_int = ord(m1_bytes)
+
+print(f"Have the oracle encrypt this message (m1): {m1}\n")
+c1 = int(input("Enter ciphertext from oracle (c1 = E(m1)): "))
+print("\n")
+
+# using property of rsa
+c2 = c * c1
+print(f"Have the oracle decrypt this message (c2 = c * c1): {c2}\n")
+
+m2 = int(input("Enter decrypted ciphertext as HEX (m2 = D(c2): "), 16)
+print("\n")
+
+# Exploit the homomorphic property of RSA some more
+m_int = m2 // m1_int
+m = m_int.to_bytes(len(str(m_int)), "big").decode("utf-8").lstrip("\x00")
+print(f"Password (m = m2 / m1): {m}\n")
+
+print("-" * 50)
+
+print("Phase 2: Decrypt secret.enc\n")
+
+# Decrypt the secret and print it
+res = run(["openssl", "enc", "-aes-256-cbc", "-d", "-in", "secret.enc", "-pass",
+f"pass:{m}"], stdout=PIPE, stderr=PIPE, text=True)
+print(res.stdout)
+```
+- running this script and using the oracle side by side ,we obtained the flag.
+```
+$ python3 c.py
+Phase 1: Get password
+
+c = 3567252736412634555920569398403787395170577668834666742330267390011828943495692402033350307843527370186546259265692029368644049938630024394169760506488003
+
+Enter message (m1): a
+Have the oracle encrypt this message (m1): a
+
+Enter ciphertext from oracle (c1 = E(m1)): 1894792376935242028465556366618011019548511575881945413668351305441716829547731248120542989065588556431978903597240454296152579184569578379625520200356186
+
+
+Have the oracle decrypt this message (c2 = c * c1): 6759203291556042231884299567348859177930002052933581070542971197285711015106013555983327382520890013292510910732035253877762059526771378554060662044890667955724486048505501021744299550049249400949244607539943901804897303068723126577086285320298610508086645085015303403649613600120029026519364249924535836558
+
+Enter decrypted ciphertext as HEX (m2 = D(c2): 136665a6be83
+
+
+Password (m = m2 / m1): 3319c
+
+--------------------------------------------------
+Phase 2: Decrypt secret.enc
+
+picoCTF{su((3ss_(r@ck1ng_r3@_3319c817}
+```
+- rsa oracle:
+```
+*****************************************
+****************THE ORACLE***************
+*****************************************
+what should we do for you?
+E --> encrypt D --> decrypt.
+E
+enter text to encrypt (encoded length must be less than keysize): a
+a
+
+encoded cleartext as Hex m: 61
+
+ciphertext (m ^ e mod n) 1894792376935242028465556366618011019548511575881945413668351305441716829547731248120542989065588556431978903597240454296152579184569578379625520200356186
+
+what should we do for you?
+E --> encrypt D --> decrypt.
+D
+Enter text to decrypt: 6759203291556042231884299567348859177930002052933581070542971197285711015106013555983327382520890013292510910732035253877762059526771378554060662044890667955724486048505501021744299550049249400949244607539943901804897303068723126577086285320298610508086645085015303403649613600120029026519364249924535836558
+decrypted ciphertext as hex (c ^ d mod n): 136665a6be83
+decrypted ciphertext: fe¦¾
+```
+## Flag:
+`picoCTF{su((3ss_(r@ck1ng_r3@_3319c817}`
