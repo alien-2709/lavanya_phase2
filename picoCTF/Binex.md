@@ -271,32 +271,7 @@ k2             0x0
 - here `rbp` looks similar to the hex that the code was equal to ,this is what we need to find out the offset that we overflowed our buffer at.
 - using the script , i was able to obtain the local flag not the real one.
 ```
-$ python3 - <<'PY'
-from pwn import *
-> print(cyclic_find(0x280))
-PY
--1
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ cd chall
--bash: cd: chall: Not a directory
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ nano cyclic_find.py
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ python3 cyclic_find.py 0x280
-Pattern not found (try increasing pattern size)
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ nano cyclic_find.py
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ python3 cyclic_find.py 0x280
-Traceback (most recent call last):
-  File "/mnt/c/Users/drsan/Downloads/cyclic_find.py", line 36, in <module>
-    off = find_offset(sys.argv[1])
-  File "/mnt/c/Users/drsan/Downloads/cyclic_find.py", line 22, in find_offset
-    pattern = make_pattern(10000)  # large enough
-  File "/mnt/c/Users/drsan/Downloads/cyclic_find.py", line 11, in make_pattern
-    if len("".join(pat)) >= length:
-TypeError: sequence item 0: expected str instance, int found
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ from pwn import *
-Command 'from' not found, but can be installed with:
-sudo apt install mailutils
-alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ from pwn import *
-Command 'from' not found, but can be installed with:
-sudo apt install mailutils
+
 alien2709@BORKARS:/mnt/c/Users/drsan/Downloads$ python3 - <<'s'
 > from pwn import *
 > connect = process('./chall')
